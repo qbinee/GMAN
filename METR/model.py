@@ -127,8 +127,8 @@ def temporalAttention(X, STE, K, d, bn, bn_decay, is_training, mask = True):
     # mask attention score
     if mask:
         batch_size = tf.shape(X)[0]
-        num_step = X.get_shape()[1].value
-        N = X.get_shape()[2].value
+        num_step = X.get_shape()[1]
+        N = X.get_shape()[2]
         mask = tf.ones(shape = (num_step, num_step))
         mask = tf.linalg.LinearOperatorLowerTriangular(mask).to_dense()
         mask = tf.expand_dims(tf.expand_dims(mask, axis = 0), axis = 0)
@@ -241,9 +241,7 @@ def GMAN(X, TE, SE, P, Q, T, L, K, d, bn, bn_decay, is_training):
     D = K * d
     # input
     X = tf.expand_dims(X, axis = -1)
-    X = FC(
-        X, units = [D, D], activations = [tf.nn.relu, None],
-        bn = bn, bn_decay = bn_decay, is_training = is_training)
+    X = FC(X, units = [D, D], activations = [tf.nn.relu, None],bn = bn, bn_decay = bn_decay, is_training = is_training)
     # STE
     STE = STEmbedding(SE, TE, T, D, bn, bn_decay, is_training)
     STE_P = STE[:, : P]

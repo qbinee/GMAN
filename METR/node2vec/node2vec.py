@@ -30,11 +30,11 @@ class Graph():
 			cur_nbrs = sorted(G.neighbors(cur))
 			if len(cur_nbrs) > 0:
 				if len(walk) == 1:
-					walk.append(cur_nbrs[alias_draw(alias_nodes[cur][0], alias_nodes[cur][1])])
+					walk.append(cur_nbrs[int(alias_draw(alias_nodes[cur][0], alias_nodes[cur][1]))])
 				else:
 					prev = walk[-2]
-					next = cur_nbrs[alias_draw(alias_edges[(prev, cur)][0], 
-						alias_edges[(prev, cur)][1])]
+					next = cur_nbrs[int(alias_draw(alias_edges[(prev, cur)][0],
+						alias_edges[(prev, cur)][1]))]
 					walk.append(next)
 			else:
 				break
@@ -117,7 +117,7 @@ def alias_setup(probs):
 	'''
 	K = len(probs)
 	q = np.zeros(K)
-	J = np.zeros(K, dtype=np.int)
+	J = np.zeros(K, dtype=np.float32)
 
 	smaller = []
 	larger = []

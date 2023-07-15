@@ -5,6 +5,7 @@ import time, datetime
 import numpy as np
 import tensorflow as tf
 
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--time_slot', type = int, default = 5,
                     help = 'a time step is 5 mins')
@@ -34,7 +35,7 @@ parser.add_argument('--learning_rate', type=float, default = 0.001,
                     help = 'initial learning rate')
 parser.add_argument('--decay_epoch', type=int, default = 5,
                     help = 'decay epoch')
-parser.add_argument('--traffic_file', default = 'data/METR.h5',
+parser.add_argument('--traffic_file', default = '/Users/igyubin/school/GMAN/data/metr-la.h5',
                     help = 'traffic file')
 parser.add_argument('--SE_file', default = 'data/SE(METR).txt',
                     help = 'spatial emebdding file')
@@ -51,8 +52,7 @@ utils.log_string(log, str(args)[10 : -1])
 
 # load data
 utils.log_string(log, 'loading data...')
-(trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY, SE,
- mean, std) = utils.loadData(args)
+(trainX, trainTE, trainY, valX, valTE, valY, testX, testTE, testY, SE, mean, std) = utils.loadData(args)
 utils.log_string(log, 'trainX: %s\ttrainY: %s' % (trainX.shape, trainY.shape))
 utils.log_string(log, 'valX:   %s\t\tvalY:   %s' % (valX.shape, valY.shape))
 utils.log_string(log, 'testX:  %s\t\ttestY:  %s' % (testX.shape, testY.shape))
@@ -62,6 +62,7 @@ utils.log_string(log, 'data loaded!')
 utils.log_string(log, 'compiling model...')
 T = 24 * 60 // args.time_slot
 num_train, _, N = trainX.shape
+tf.compat.v1.disable_eager_execution()
 X, TE, label, is_training = model.placeholder(args.P, args.Q, N)
 global_step = tf.Variable(0, trainable = False)
 bn_momentum = tf.compat.v1.train.exponential_decay(
@@ -69,9 +70,7 @@ bn_momentum = tf.compat.v1.train.exponential_decay(
     decay_steps = args.decay_epoch * num_train // args.batch_size,
     decay_rate = 0.5, staircase = True)
 bn_decay = tf.minimum(0.99, 1 - bn_momentum)
-pred = model.GMAN(
-    X, TE, SE, args.P, args.Q, T, args.L, args.K, args.d,
-    bn = True, bn_decay = bn_decay, is_training = is_training)
+pred = model.GMAN(X, TE, SE, args.P, args.Q, T, args.L, args.K, args.d, bn = True, bn_decay = bn_decay, is_training = is_training)
 pred = pred * std + mean
 loss = model.mae_loss(pred, label)
 tf.compat.v1.add_to_collection('pred', pred)
@@ -85,7 +84,7 @@ optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate)
 train_op = optimizer.minimize(loss, global_step = global_step)
 parameters = 0
 for variable in tf.compat.v1.trainable_variables():
-    parameters += np.product([x.value for x in variable.get_shape()])
+    parameters += np.product([x for x in variable.get_shape()])
 utils.log_string(log, 'trainable parameters: {:,}'.format(parameters))
 utils.log_string(log, 'model compiled!')
 saver = tf.compat.v1.train.Saver()
@@ -110,7 +109,9 @@ for epoch in range(args.max_epoch):
     start_train = time.time()
     train_loss = 0
     num_batch = math.ceil(num_train / args.batch_size)
+    utils.log_string(log, 'running process')
     for batch_idx in range(num_batch):
+        utils.log_string(log, 'running batch process')
         start_idx = batch_idx * args.batch_size
         end_idx = min(num_train, (batch_idx + 1) * args.batch_size)
         feed_dict = {

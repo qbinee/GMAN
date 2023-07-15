@@ -34,6 +34,8 @@ def seq2instance(data, P, Q):
         y[i] = data[i + P : i + P + Q]
     return x, y
 
+
+
 def loadData(args):
     # Traffic
     df = pd.read_hdf(args.traffic_file)
@@ -70,8 +72,9 @@ def loadData(args):
     # temporal embedding 
     Time = df.index
     dayofweek =  np.reshape(Time.weekday, newshape = (-1, 1))
+    ## github 보고 수정한 부분
     timeofday = (Time.hour * 3600 + Time.minute * 60 + Time.second) \
-                // Time.freq.delta.total_seconds()
+                // 560
     timeofday = np.reshape(timeofday, newshape = (-1, 1))    
     Time = np.concatenate((dayofweek, timeofday), axis = -1)
     # train/val/test
